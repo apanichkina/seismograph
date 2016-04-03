@@ -35,4 +35,4 @@ import unittest
 class ExampleTestCase(unittest.TestCase):
 
     def test(self):
-        print 'Hello World!'
+       self.assertEqual('1 even', '1221123123123123')
