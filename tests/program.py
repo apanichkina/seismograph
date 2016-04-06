@@ -314,7 +314,56 @@ class ProgramContextOnRunTests(unittest.TestCase):
     def tearDown(self):
         pass
 
+@patch('seismograph.program.Program._make_result')
+@patch('seismograph.program.extensions')
+@patch('seismograph.program.ext')
+@patch('seismograph.program.ProgramContext')
+class ProgramInit(unittest.TestCase):
 
+    def setUp(self):
+        self.patcherConfig = patch('seismograph.program.config')
+        self.mockConfig = self.patcherConfig.start()
+        Program.__config_class__ = Mock(OUTPUT = Mock())
+        self.parser = Mock()
+        self.parser.parse_args = Mock(return_value=('TestOptions', None))
+        self.mockConfig.create_option_parser = Mock(return_value=self.parser)
+
+
+    def testInitArgv(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+        newargs = ['TestArg1', 'TestArg2']
+        args = sys.argv[:]
+        Program(argv=newargs)
+        args.extend(newargs)
+        self.assertEqual(args, sys.argv)
+
+    def testInit__Layers__(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+        progContextObject = Mock()
+        progContextObject.add_layers = Mock()
+        mockContext.return_value = progContextObject
+        newargs = ['TestArg1', 'TestArg2']
+        Program.__layers__ = newargs
+        Program()
+        progContextObject.add_layers.assert_called_once_with(newargs)
+
+    def testInitLayers(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+        progContextObject = Mock()
+        progContextObject.add_layers = Mock()
+        mockContext.return_value = progContextObject
+        newargs = ['TestArg1', 'TestArg2']
+        Program(layers=newargs)
+        progContextObject.add_layers.assert_called_once_with(newargs)
+
+    def testInitExtensionsAdd(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+        extensions = [Mock(), Mock(), Mock()]
+        mockExt.TO_INIT = extensions[:]
+        Program()
+        calls = []
+        for extension in extensions:
+            calls.append(call(extension, self.parser))
+        mockExtensions.add_options.assert_has_calls(calls, any_order=True)
+
+    def tearDown(self):
+        self.patcherConfig.stop()
 
 if __name__ == '__main__':
     print("\n")
