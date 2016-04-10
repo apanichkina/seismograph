@@ -1,10 +1,13 @@
 import unittest
-import sys, os
+import sys
+import os
+
 from mock import *
-sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/'+'../..')
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/' + '..')
 from seismograph.program import *
 import seismograph.program as _program
-import seismograph.utils.common as _common
+
 
 class ProgramContextInitTests(unittest.TestCase):
     def setUp(self):
@@ -20,16 +23,19 @@ class ProgramContextInitTests(unittest.TestCase):
     def tearDown(self):
         pass
 
+
 class ProgramContextLayersTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
         self.testContext = ProgramContext(self.setup, 'teardown')
 
         self.userLayers = getattr(self.testContext, '_' + self.testContext.__class__.__name__ + '__layers')
-        userLayers = [ Mock(enabled = True),  Mock(enabled = True),  Mock(enabled = True), Mock(enabled = False), Mock(enabled = True)]
+        userLayers = [Mock(enabled=True), Mock(enabled=True), Mock(enabled=True), Mock(enabled=False),
+                      Mock(enabled=True)]
         self.userLayers.extend(userLayers[:])
 
-        self.defaultLayers = [ Mock(enabled = True),  Mock(enabled = False),  Mock(enabled = True), Mock(enabled = False), Mock(enabled = True)]
+        self.defaultLayers = [Mock(enabled=True), Mock(enabled=False), Mock(enabled=True), Mock(enabled=False),
+                              Mock(enabled=True)]
 
         filteredLayers = []
         for layer in self.defaultLayers:
@@ -47,7 +53,7 @@ class ProgramContextLayersTests(unittest.TestCase):
         self.program.__class_name__ = Mock(return_value=self.returned_value)
 
     def testAddLayers(self):
-        userLayers = [ Mock(enabled = False),  Mock(enabled = True),  Mock(enabled = True)]
+        userLayers = [Mock(enabled=False), Mock(enabled=True), Mock(enabled=True)]
         list = self.userLayers[:]
         self.testContext.add_layers(userLayers)
         list.extend(userLayers)
@@ -62,7 +68,6 @@ class ProgramContextLayersTests(unittest.TestCase):
                 self.assertEqual(layer, layerGenerator.next())
 
         _program.DEFAULT_LAYERS = []
-
 
     def testLayersDefaultAndCustom(self):
         layerGenerator = self.testContext.layers
@@ -79,6 +84,7 @@ class ProgramContextLayersTests(unittest.TestCase):
 
     def tearDown(self):
         pass
+
 
 class ProgramContextStartTests(unittest.TestCase):
     def setUp(self):
@@ -99,7 +105,7 @@ class ProgramContextStartTests(unittest.TestCase):
     def testStartContextChainCall(self, mock_logger, mock_to_chain):
         self.testContext.start_context(self.program)
         # CAN't COMPARE GENERATORS
-        #calls = [call( self.testContext.layers , 'on setup', self.program), call([self.setup], None)]
+        # calls = [call( self.testContext.layers , 'on setup', self.program), call([self.setup], None)]
         #
         calls = [call([self.setup], None)]
         self.assertEqual(mock_to_chain.call_count, 2)
@@ -109,7 +115,7 @@ class ProgramContextStartTests(unittest.TestCase):
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
     def testStartContextBaseExceptionRaise(self, mock_logger, mock_to_chain, mock_runnable):
-        mock_to_chain.side_effect=BaseException()
+        mock_to_chain.side_effect = BaseException()
         mock_runnable.stopped_on = Mock()
         self.assertRaises(BaseException, self.testContext.start_context, self.program)
 
@@ -117,16 +123,17 @@ class ProgramContextStartTests(unittest.TestCase):
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
     def testStartContextExceptionStoppedOn(self, mock_logger, mock_to_chain, mock_runnable):
-        mock_to_chain.side_effect=BaseException()
+        mock_to_chain.side_effect = BaseException()
         mock_runnable.stopped_on = Mock()
         try:
             self.testContext.start_context(self.program)
         except:
             pass
-        mock_runnable.stopped_on.assert_called_once_with(self.program,"start_context")
+        mock_runnable.stopped_on.assert_called_once_with(self.program, "start_context")
 
     def tearDown(self):
         pass
+
 
 class ProgramContextStopTests(unittest.TestCase):
     def setUp(self):
@@ -135,7 +142,6 @@ class ProgramContextStopTests(unittest.TestCase):
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
-
 
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
@@ -153,7 +159,7 @@ class ProgramContextStopTests(unittest.TestCase):
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
     def testStopContextBaseExceptionRaise(self, mock_logger, mock_to_chain, mock_runnable):
-        mock_to_chain.side_effect=BaseException()
+        mock_to_chain.side_effect = BaseException()
         mock_runnable.stopped_on = Mock()
         self.assertRaises(BaseException, self.testContext.stop_context, self.program)
 
@@ -161,13 +167,13 @@ class ProgramContextStopTests(unittest.TestCase):
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
     def testStopContextExceptionStoppedOn(self, mock_logger, mock_to_chain, mock_runnable):
-        mock_to_chain.side_effect=BaseException()
+        mock_to_chain.side_effect = BaseException()
         mock_runnable.stopped_on = Mock()
         try:
             self.testContext.stop_context(self.program)
         except:
             pass
-        mock_runnable.stopped_on.assert_called_once_with(self.program,"stop_context")
+        mock_runnable.stopped_on.assert_called_once_with(self.program, "stop_context")
 
     def tearDown(self):
         pass
@@ -185,7 +191,8 @@ class ProgramContextOnInitTests(unittest.TestCase):
     @patch('seismograph.program.logger')
     def testOnInitLog(self, mock_logger, mock_to_chain):
         self.testContext.on_init(self.program)
-        mock_logger.debug.assert_called_with('Call to chain callbacks "on_init" of program "{}"'.format(self.returned_value))
+        mock_logger.debug.assert_called_with(
+            'Call to chain callbacks "on_init" of program "{}"'.format(self.returned_value))
 
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
@@ -211,7 +218,8 @@ class ProgramContextOnConfigTests(unittest.TestCase):
         config1 = Mock(callable)
         config2 = Mock(callable)
         self.testContext.on_config(self.program, [config1, config2])
-        mock_logger.debug.assert_called_with('Call to chain callbacks "on_config" of program "{}"'.format(self.returned_value))
+        mock_logger.debug.assert_called_with(
+            'Call to chain callbacks "on_config" of program "{}"'.format(self.returned_value))
 
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
@@ -237,7 +245,8 @@ class ProgramContextErrorTests(unittest.TestCase):
     @patch('seismograph.program.logger')
     def testErrorContextLog(self, mock_logger, mock_to_chain):
         self.testContext.on_error('TestError', self.program, 'TestResult')
-        mock_logger.debug.assert_called_with('Call to chain callbacks "on_error" of program "{}"'.format(self.returned_value))
+        mock_logger.debug.assert_called_with(
+            'Call to chain callbacks "on_error" of program "{}"'.format(self.returned_value))
 
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
@@ -250,7 +259,7 @@ class ProgramContextErrorTests(unittest.TestCase):
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
     def testErrorContextBaseExceptionRaise(self, mock_logger, mock_to_chain, mock_runnable):
-        mock_to_chain.side_effect=BaseException()
+        mock_to_chain.side_effect = BaseException()
         mock_runnable.stopped_on = Mock()
         self.assertRaises(BaseException, self.testContext.on_error, 'TestError', self.program, 'TestResult')
 
@@ -294,7 +303,8 @@ class ProgramContextOnRunTests(unittest.TestCase):
     @patch('seismograph.program.logger')
     def testOnRunContextLog(self, mock_logger, mock_to_chain):
         self.testContext.on_run(self.program)
-        mock_logger.debug.assert_called_with('Call to chain callbacks "on_run" of program "{}"'.format(self.returned_value))
+        mock_logger.debug.assert_called_with(
+            'Call to chain callbacks "on_run" of program "{}"'.format(self.returned_value))
 
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
@@ -307,36 +317,42 @@ class ProgramContextOnRunTests(unittest.TestCase):
     @patch('seismograph.program.call_to_chain')
     @patch('seismograph.program.logger')
     def testOnRunContextBaseExceptionRaise(self, mock_logger, mock_to_chain, mock_runnable):
-        mock_to_chain.side_effect=BaseException()
+        mock_to_chain.side_effect = BaseException()
         mock_runnable.stopped_on = Mock()
         self.assertRaises(BaseException, self.testContext.on_run, self.program)
 
     def tearDown(self):
         pass
 
-@patch('seismograph.program.Program._make_result')
+
 @patch('seismograph.program.extensions')
 @patch('seismograph.program.ext')
 @patch('seismograph.program.ProgramContext')
 class ProgramInit(unittest.TestCase):
-
     def setUp(self):
         self.patcherConfig = patch('seismograph.program.config')
         self.mockConfig = self.patcherConfig.start()
-        Program.__config_class__ = Mock(OUTPUT = Mock())
+        Program.__config_class__ = Mock(OUTPUT=Mock())
         self.parser = Mock()
         self.parser.parse_args = Mock(return_value=('TestOptions', None))
         self.mockConfig.create_option_parser = Mock(return_value=self.parser)
 
-
-    def testInitArgv(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+    @patch('seismograph.program.Program.register_scripts')
+    @patch('seismograph.program.Program.register_suites')
+    @patch('seismograph.program.Program._make_result')
+    def testInitArgv(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
+                     mockExtensions):
         newargs = ['TestArg1', 'TestArg2']
         args = sys.argv[:]
         Program(argv=newargs)
         args.extend(newargs)
         self.assertEqual(args, sys.argv)
 
-    def testInit__Layers__(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+    @patch('seismograph.program.Program.register_scripts')
+    @patch('seismograph.program.Program.register_suites')
+    @patch('seismograph.program.Program._make_result')
+    def testInit__Layers__(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
+                           mockExtensions):
         progContextObject = Mock()
         progContextObject.add_layers = Mock()
         mockContext.return_value = progContextObject
@@ -345,7 +361,11 @@ class ProgramInit(unittest.TestCase):
         Program()
         progContextObject.add_layers.assert_called_once_with(newargs)
 
-    def testInitLayers(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+    @patch('seismograph.program.Program.register_scripts')
+    @patch('seismograph.program.Program.register_suites')
+    @patch('seismograph.program.Program._make_result')
+    def testInitLayers(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
+                       mockExtensions):
         progContextObject = Mock()
         progContextObject.add_layers = Mock()
         mockContext.return_value = progContextObject
@@ -353,7 +373,11 @@ class ProgramInit(unittest.TestCase):
         Program(layers=newargs)
         progContextObject.add_layers.assert_called_once_with(newargs)
 
-    def testInitExtensionsAdd(self, mockContext, mockExt, mockExtensions, mockMakeResult):
+    @patch('seismograph.program.Program.register_scripts')
+    @patch('seismograph.program.Program.register_suites')
+    @patch('seismograph.program.Program._make_result')
+    def testInitExtensionsAdd(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
+                              mockExtensions):
         extensions = [Mock(), Mock(), Mock()]
         mockExt.TO_INIT = extensions[:]
         Program()
@@ -362,8 +386,100 @@ class ProgramInit(unittest.TestCase):
             calls.append(call(extension, self.parser))
         mockExtensions.add_options.assert_has_calls(calls, any_order=True)
 
+    @patch('seismograph.program.Program.register_scripts')
+    @patch('seismograph.program.Program.register_suites')
+    @patch('seismograph.program.Program._make_result')
+    def testInitSuitesAdd(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
+                          mockExtensions):
+        suites = [Mock(), Mock(), Mock()]
+        Program(suites=suites)
+        mockRegisterSuites.assert_called_with(suites)
+
+    @patch('seismograph.program.Program.register_scripts')
+    @patch('seismograph.program.Program.register_suites')
+    @patch('seismograph.program.Program._make_result')
+    def testInitScriptAdd(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
+                          mockExtensions):
+        scripts = [Mock(), Mock(), Mock()]
+        Program(scripts=scripts)
+        mockRegisterScripts.assert_called_with(scripts)
+
+    @patch('seismograph.program.loader.load_suites_from_path')
+    @patch('seismograph.program.loader.load_suites_from_module')
+    @patch('seismograph.program.loader')
+    @patch('seismograph.program.Program._make_result')
+    def testLoadSuitesNoPath(self,mockMakeResult ,mock_loader, load_module, load_path, mockContext, mockExt, mockExtensions):
+        self.program = Program()
+        self.program.load_suites()
+        assert load_module.called
+
+    @patch('seismograph.program.loader.load_suites_from_path')
+    @patch('seismograph.program.loader.load_suites_from_module')
+    @patch('seismograph.program.loader')
+    @patch('seismograph.program.Program._make_result')
+    def testLoadSuitesWithPath(self,mockMakeResult ,mock_loader, load_module, load_path, mockContext, mockExt, mockExtensions):
+        self.program = Program()
+        self.program.load_suites('lol')
+        assert load_path.called
+
     def tearDown(self):
         self.patcherConfig.stop()
+
+@patch('seismograph.program.extensions')
+@patch('seismograph.program.ext')
+@patch('seismograph.program.ProgramContext')
+class ProgramMethods(unittest.TestCase):
+    def setUp(self):
+        # self.patcherConfig = patch('seismograph.program.config')
+        # self.mockConfig = self.patcherConfig.start()
+
+        self.config = Mock(OUTPUT='Test.txt')
+        Program.__layers__ = None
+        Program.__config_class__ = Mock(return_value=self.config)
+        self.program = Program()
+        self.parser = Mock()
+        self.parser.parse_args = Mock(return_value=('TestOptions', None))
+
+    def testProgramNoSuitesAndScripts(self, mockContext, mockExt, mockExtensions):
+        self.assertRaises(RuntimeError, self.program.__run__)
+
+    def testSuiteGroupClass(self, mockContext, mockExt, mockExtensions):
+        suiteGroup = Mock()
+        self.program.__suite_group_class__ = Mock(return_value = suiteGroup)
+        a = self.program._make_group()
+        self.assertEqual(suiteGroup, a)
+
+    @patch('seismograph.groups.gevent.GeventSuiteGroup')
+    def testGeventSuite(self, mockGevent, mockContext, mockExt, mockExtensions):
+        self.program.__suite_group_class__ = None
+        geventGroup = Mock()
+        mockGevent.return_value = geventGroup
+        self.program.config.GEVENT = 1
+        self.assertEqual(geventGroup, self.program._make_group())
+
+    @patch('seismograph.groups.threading.ThreadingSuiteGroup')
+    def testThreadingSuite(self, mockThreading, mockContext, mockExt, mockExtensions):
+        self.program.__suite_group_class__ = None
+        threadingGroup = Mock()
+        mockThreading.return_value = threadingGroup
+        self.program.config.GEVENT = None
+        self.program.config.THREADING = 1
+        self.assertEqual(threadingGroup, self.program._make_group())
+
+    @patch('seismograph.groups.multiprocessing.MultiprocessingSuiteGroup')
+    def testMultiProcessingSuite(self, mockProcessing, mockContext, mockExt, mockExtensions):
+        self.program.__suite_group_class__ = None
+        processingGroup = Mock()
+        mockProcessing.return_value = processingGroup
+        self.program.config.GEVENT = None
+        self.program.config.THREADING = None
+        self.program.config.PROCESSING = 1
+        self.assertEqual(processingGroup, self.program._make_group())
+
+    def tearDown(self):
+       pass
+
+
 
 if __name__ == '__main__':
     print("\n")
