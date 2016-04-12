@@ -436,14 +436,16 @@ class ProgramMethods(unittest.TestCase):
         self.config = Mock(OUTPUT='Test.txt')
         Program.__layers__ = None
         Program.__config_class__ = Mock(return_value=self.config)
-        self.program = Program()
+        # self.program = Program()
         self.parser = Mock()
         self.parser.parse_args = Mock(return_value=('TestOptions', None))
 
     def testProgramNoSuitesAndScripts(self, mockContext, mockExt, mockExtensions):
+        self.program = Program()
         self.assertRaises(RuntimeError, self.program.__run__)
 
     def testSuiteGroupClass(self, mockContext, mockExt, mockExtensions):
+        self.program = Program()
         suiteGroup = Mock()
         self.program.__suite_group_class__ = Mock(return_value = suiteGroup)
         a = self.program._make_group()
@@ -451,6 +453,7 @@ class ProgramMethods(unittest.TestCase):
 
     @patch('seismograph.groups.gevent.GeventSuiteGroup')
     def testGeventSuite(self, mockGevent, mockContext, mockExt, mockExtensions):
+        self.program = Program()
         self.program.__suite_group_class__ = None
         geventGroup = Mock()
         mockGevent.return_value = geventGroup
@@ -459,6 +462,7 @@ class ProgramMethods(unittest.TestCase):
 
     @patch('seismograph.groups.threading.ThreadingSuiteGroup')
     def testThreadingSuite(self, mockThreading, mockContext, mockExt, mockExtensions):
+        self.program = Program()
         self.program.__suite_group_class__ = None
         threadingGroup = Mock()
         mockThreading.return_value = threadingGroup
@@ -468,6 +472,7 @@ class ProgramMethods(unittest.TestCase):
 
     @patch('seismograph.groups.multiprocessing.MultiprocessingSuiteGroup')
     def testMultiProcessingSuite(self, mockProcessing, mockContext, mockExt, mockExtensions):
+        self.program = Program()
         self.program.__suite_group_class__ = None
         processingGroup = Mock()
         mockProcessing.return_value = processingGroup
