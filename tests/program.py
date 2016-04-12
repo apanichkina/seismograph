@@ -2,17 +2,16 @@ import unittest
 import sys
 import os
 
-from mock import *
+from mock import Mock, patch, call
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/' + '..')
-from seismograph.program import *
 import seismograph.program as _program
 
 
 class ProgramContextInitTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
 
     def testSetupSaving(self):
         self.assertEqual(self.setup, self.testContext.setup_callbacks[0])
@@ -27,7 +26,7 @@ class ProgramContextInitTests(unittest.TestCase):
 class ProgramContextLayersTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
 
         self.userLayers = getattr(self.testContext, '_' + self.testContext.__class__.__name__ + '__layers')
         userLayers = [Mock(enabled=True), Mock(enabled=True), Mock(enabled=True), Mock(enabled=False),
@@ -80,7 +79,7 @@ class ProgramContextLayersTests(unittest.TestCase):
                 self.assertEqual(layer, layerGenerator.next())
 
         _program.DEFAULT_LAYERS = []
-        self.testContext = ProgramContext('setup', 'teardown')
+        self.testContext = _program.ProgramContext('setup', 'teardown')
 
     def tearDown(self):
         pass
@@ -89,7 +88,7 @@ class ProgramContextLayersTests(unittest.TestCase):
 class ProgramContextStartTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -104,9 +103,6 @@ class ProgramContextStartTests(unittest.TestCase):
     @patch('seismograph.program.logger')
     def testStartContextChainCall(self, mock_logger, mock_to_chain):
         self.testContext.start_context(self.program)
-        # CAN't COMPARE GENERATORS
-        # calls = [call( self.testContext.layers , 'on setup', self.program), call([self.setup], None)]
-        #
         calls = [call([self.setup], None)]
         self.assertEqual(mock_to_chain.call_count, 2)
         mock_to_chain.assert_has_calls(calls, any_order=True)
@@ -138,7 +134,7 @@ class ProgramContextStartTests(unittest.TestCase):
 class ProgramContextStopTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -182,7 +178,7 @@ class ProgramContextStopTests(unittest.TestCase):
 class ProgramContextOnInitTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -207,7 +203,7 @@ class ProgramContextOnInitTests(unittest.TestCase):
 class ProgramContextOnConfigTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -236,7 +232,7 @@ class ProgramContextOnConfigTests(unittest.TestCase):
 class ProgramContextErrorTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -270,7 +266,7 @@ class ProgramContextErrorTests(unittest.TestCase):
 class ProgramContextOnOptionTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -294,7 +290,7 @@ class ProgramContextOnOptionTests(unittest.TestCase):
 class ProgramContextOnRunTests(unittest.TestCase):
     def setUp(self):
         self.setup = Mock(callable)
-        self.testContext = ProgramContext(self.setup, 'teardown')
+        self.testContext = _program.ProgramContext(self.setup, 'teardown')
         self.program = Mock()
         self.returned_value = "Mock"
         self.program.__class_name__ = Mock(return_value=self.returned_value)
@@ -332,7 +328,7 @@ class ProgramInit(unittest.TestCase):
     def setUp(self):
         self.patcherConfig = patch('seismograph.program.config')
         self.mockConfig = self.patcherConfig.start()
-        Program.__config_class__ = Mock(OUTPUT=Mock())
+        _program.Program.__config_class__ = Mock(OUTPUT=Mock())
         self.parser = Mock()
         self.parser.parse_args = Mock(return_value=('TestOptions', None))
         self.mockConfig.create_option_parser = Mock(return_value=self.parser)
@@ -344,7 +340,7 @@ class ProgramInit(unittest.TestCase):
                      mockExtensions):
         newargs = ['TestArg1', 'TestArg2']
         args = sys.argv[:]
-        Program(argv=newargs)
+        _program.Program(argv=newargs)
         args.extend(newargs)
         self.assertEqual(args, sys.argv)
 
@@ -357,8 +353,8 @@ class ProgramInit(unittest.TestCase):
         progContextObject.add_layers = Mock()
         mockContext.return_value = progContextObject
         newargs = ['TestArg1', 'TestArg2']
-        Program.__layers__ = newargs
-        Program()
+        _program.Program.__layers__ = newargs
+        _program.Program()
         progContextObject.add_layers.assert_called_once_with(newargs)
 
     @patch('seismograph.program.Program.register_scripts')
@@ -370,7 +366,7 @@ class ProgramInit(unittest.TestCase):
         progContextObject.add_layers = Mock()
         mockContext.return_value = progContextObject
         newargs = ['TestArg1', 'TestArg2']
-        Program(layers=newargs)
+        _program.Program(layers=newargs)
         progContextObject.add_layers.assert_called_once_with(newargs)
 
     @patch('seismograph.program.Program.register_scripts')
@@ -380,7 +376,7 @@ class ProgramInit(unittest.TestCase):
                               mockExtensions):
         extensions = [Mock(), Mock(), Mock()]
         mockExt.TO_INIT = extensions[:]
-        Program()
+        _program.Program()
         calls = []
         for extension in extensions:
             calls.append(call(extension, self.parser))
@@ -392,7 +388,7 @@ class ProgramInit(unittest.TestCase):
     def testInitSuitesAdd(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
                           mockExtensions):
         suites = [Mock(), Mock(), Mock()]
-        Program(suites=suites)
+        _program.Program(suites=suites)
         mockRegisterSuites.assert_called_with(suites)
 
     @patch('seismograph.program.Program.register_scripts')
@@ -401,7 +397,7 @@ class ProgramInit(unittest.TestCase):
     def testInitScriptAdd(self, mockMakeResult, mockRegisterSuites, mockRegisterScripts, mockContext, mockExt,
                           mockExtensions):
         scripts = [Mock(), Mock(), Mock()]
-        Program(scripts=scripts)
+        _program.Program(scripts=scripts)
         mockRegisterScripts.assert_called_with(scripts)
 
     @patch('seismograph.program.loader.load_suites_from_path')
@@ -409,7 +405,7 @@ class ProgramInit(unittest.TestCase):
     @patch('seismograph.program.loader')
     @patch('seismograph.program.Program._make_result')
     def testLoadSuitesNoPath(self,mockMakeResult ,mock_loader, load_module, load_path, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         self.program.load_suites()
         assert load_module.called
 
@@ -418,7 +414,7 @@ class ProgramInit(unittest.TestCase):
     @patch('seismograph.program.loader')
     @patch('seismograph.program.Program._make_result')
     def testLoadSuitesWithPath(self,mockMakeResult ,mock_loader, load_module, load_path, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         self.program.load_suites('lol')
         assert load_path.called
 
@@ -434,18 +430,18 @@ class ProgramMethods(unittest.TestCase):
         # self.mockConfig = self.patcherConfig.start()
 
         self.config = Mock(OUTPUT='Test.txt')
-        Program.__layers__ = None
-        Program.__config_class__ = Mock(return_value=self.config)
+        _program.Program.__layers__ = None
+        _program.Program.__config_class__ = Mock(return_value=self.config)
         # self.program = Program()
         self.parser = Mock()
         self.parser.parse_args = Mock(return_value=('TestOptions', None))
 
     def testProgramNoSuitesAndScripts(self, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         self.assertRaises(RuntimeError, self.program.__run__)
 
     def testSuiteGroupClass(self, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         suiteGroup = Mock()
         self.program.__suite_group_class__ = Mock(return_value = suiteGroup)
         a = self.program._make_group()
@@ -453,7 +449,7 @@ class ProgramMethods(unittest.TestCase):
 
     @patch('seismograph.groups.gevent.GeventSuiteGroup')
     def testGeventSuite(self, mockGevent, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         self.program.__suite_group_class__ = None
         geventGroup = Mock()
         mockGevent.return_value = geventGroup
@@ -462,7 +458,7 @@ class ProgramMethods(unittest.TestCase):
 
     @patch('seismograph.groups.threading.ThreadingSuiteGroup')
     def testThreadingSuite(self, mockThreading, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         self.program.__suite_group_class__ = None
         threadingGroup = Mock()
         mockThreading.return_value = threadingGroup
@@ -472,7 +468,7 @@ class ProgramMethods(unittest.TestCase):
 
     @patch('seismograph.groups.multiprocessing.MultiprocessingSuiteGroup')
     def testMultiProcessingSuite(self, mockProcessing, mockContext, mockExt, mockExtensions):
-        self.program = Program()
+        self.program = _program.Program()
         self.program.__suite_group_class__ = None
         processingGroup = Mock()
         mockProcessing.return_value = processingGroup
